@@ -1,1 +1,1 @@
-from . import Registrable
+from .registrable import Registrable
