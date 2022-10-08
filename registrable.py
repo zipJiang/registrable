@@ -16,7 +16,7 @@ class NameAlreadyRegisteredError(Exception):
         super().__init__(f"{new_name} is already registered for callable {registration_table[new_name]}.")
 
 
-class MyRegistrable:
+class Registrable:
     __named_subclasses__: Dict[Text, Tuple[Text, Tuple[Type[T], Text]]] = defaultdict(dict)
     
     def __init__(self):
