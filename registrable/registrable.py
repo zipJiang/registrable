@@ -49,6 +49,11 @@ class Registrable:
         class_tuple = cls.__named_subclasses__[cls][class_name]
 
         class_, constructor = class_tuple
+        
+        # need to recursively call from_params with the kwargs
+        for key, val in kwargs.items():
+            if isinstance(val, dict):
+                kwargs[key] = cls.from_params(**val)
 
         if constructor is None:
             return class_(**kwargs)
