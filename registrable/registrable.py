@@ -164,6 +164,8 @@ def construct_arg(
     if hasattr(annotation, 'from_params'):
         if popped_params is default:
             return default
+        elif isinstance(popped_params, annotation):
+            return popped_params
         elif popped_params is not None:
             subextras = create_extras(annotation, extras)
             
@@ -221,6 +223,8 @@ def construct_arg(
                 _NO_DEFAULT,
                 **extras,
             )
+            
+        return value_dict
             
     elif origin in (Tuple, tuple) and all(can_construct_from_params(arg) for arg in args):
         value_list = []
