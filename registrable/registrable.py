@@ -224,6 +224,8 @@ def construct_arg(
                 **extras,
             )
             
+        return value_dict
+            
     elif origin in (Tuple, tuple) and all(can_construct_from_params(arg) for arg in args):
         value_list = []
 
