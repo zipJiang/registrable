@@ -3,6 +3,7 @@ can be inherited to give customized behavior of registration.
 """
 from typing import Text, Dict, List, Callable, TypeVar, Any, Tuple, Optional, Type
 from typing import NewType, Union
+from .lazy import Lazy
 from copy import deepcopy
 import inspect
 import collections
@@ -121,7 +122,9 @@ def create_extras(cls: Type[T], extras: Dict[str, Any]) -> Dict[str, Any]:
 def can_construct_from_params(type_: Type) -> bool:
     if type_ in [str, int, float, bool]:
         return True
-    if origin:
+    if origin == Lazy:
+        return True
+    elif origin:
         origin = getattr(type_, "__origin__", None)
         if hasattr(type_, "from_params"):
             return True
@@ -175,6 +178,14 @@ def construct_arg(
             return popped_params
         else:
             raise TypeError(f"Argument {argument_name} of {class_name} is not of type {annotation}.")
+        
+    elif origin == Lazy:
+        if popped_params is default:
+            return default
+        
+        value_cls = args[0]
+        subextras = create_extras(value_cls, extras)
+        return Lazy(value_cls, params=deepcopy(popped_params), constructor_extras=subextras)
         
     elif origin == Union:
         backup_params = deepcopy(popped_params)

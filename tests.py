@@ -3,7 +3,7 @@ functionalities.
 """
 from typing import Text, Dict
 from registrable.registrable import Registrable
-import inspect
+from registrable.lazy import Lazy
 
 
 class ModelClass(Registrable):
@@ -41,12 +41,12 @@ class CustomTrainer(Trainer):
     def __init__(
         self,
         name: Text,
-        model: ModelClass
+        model: Lazy[ModelClass]
     ):
         """
         """
         super().__init__(name)
-        self.model = model
+        self.model = model.construct(vocab_size=100)
         
 
 def test_register():
@@ -56,7 +56,6 @@ def test_register():
         "model": {
             "type": "vocab_model",
             "name": "my_model",
-            "vocab_size": 100
         }
     }
     
