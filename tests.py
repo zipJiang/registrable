@@ -1,7 +1,7 @@
 """This file is used to test some of the basic
 functionalities.
 """
-from typing import Text, Dict
+from typing import Text, Dict, List
 from registrable.registrable import Registrable
 from registrable.lazy import Lazy
 
@@ -41,27 +41,33 @@ class CustomTrainer(Trainer):
     def __init__(
         self,
         name: Text,
-        model: Lazy[ModelClass]
+        models: List[Lazy[ModelClass]]
     ):
         """
         """
         super().__init__(name)
-        self.model = model.construct(vocab_size=100)
+        self.models = [model.construct(vocab_size=100) for model in models]
         
 
 def test_register():
     params = {
         "type": "custom_trainer",
         "name": "my_trainer",
-        "model": {
-            "type": "vocab_model",
-            "name": "my_model",
-        }
+        "models": [
+            {
+                "type": "vocab_model",
+                "name": "my_model",
+            },
+            {
+                "type": "vocab_model",
+                "name": "my_model2",
+            }
+        ],
     }
     
     trainer = Trainer.from_params(params)
     
-    print(trainer.model.vocab_size)
+    print(trainer.models[1].vocab_size)
 
     
 test_register()
