@@ -164,6 +164,8 @@ def construct_arg(
     if hasattr(annotation, 'from_params'):
         if popped_params is default:
             return default
+        elif isinstance(popped_params, annotation):
+            return popped_params
         elif popped_params is not None:
             subextras = create_extras(annotation, extras)
             
