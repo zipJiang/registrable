@@ -80,7 +80,4 @@ class Lazy(Generic[T]):
         # this will overwrite the ones in self._constructor_extras with what's in kwargs.
         constructor_kwargs = {**self._constructor_extras, **kwargs}
         
-        print(self._params)
-        print(constructor_kwargs)
-        
         return self.constructor(**constructor_kwargs)

@@ -1,14 +1,26 @@
 """Define a customized registrable class that
 can be inherited to give customized behavior of registration.
 """
-from typing import Text, Dict, List, Callable, TypeVar, Any, Tuple, Optional, Type
+from typing import (
+    Text,
+    Dict,
+    List,
+    Iterable,
+    Callable,
+    Mapping,
+    TypeVar,
+    Any,
+    Tuple,
+    Optional,
+    Type,
+    Set
+)
 from typing import NewType, Union
 from .lazy import Lazy
 from copy import deepcopy
 import inspect
 import collections
 from collections import defaultdict
-from typing import Mapping
 
 
 T = TypeVar("T")
@@ -122,10 +134,11 @@ def create_extras(cls: Type[T], extras: Dict[str, Any]) -> Dict[str, Any]:
 def can_construct_from_params(type_: Type) -> bool:
     if type_ in [str, int, float, bool]:
         return True
+    
+    origin = getattr(type_, "__origin__", None)
     if origin == Lazy:
         return True
     elif origin:
-        origin = getattr(type_, "__origin__", None)
         if hasattr(type_, "from_params"):
             return True
         args = getattr(type_, "__args__")
@@ -186,6 +199,62 @@ def construct_arg(
         value_cls = args[0]
         subextras = create_extras(value_cls, extras)
         return Lazy(value_cls, params=deepcopy(popped_params), constructor_extras=subextras)
+    
+    elif (
+        origin in {collections.abc.Mapping, Mapping, Dict, dict}
+        and len(args) == 2
+        and can_construct_from_params(args[-1])
+    ):
+        value_cls = annotation.__args__[-1]
+        value_dict = {}
+        if not isinstance(popped_params, Mapping):
+            raise TypeError(
+                f"Expected {argument_name} to be a Mapping (probably a dict or a Params object)."
+            )
+
+        for key, value_params in popped_params.items():
+            value_dict[key] = construct_arg(
+                str(value_cls),
+                argument_name + "." + key,
+                value_params,
+                value_cls,
+                _NO_DEFAULT,
+                **extras,
+            )
+            
+    elif origin in (Tuple, tuple) and all(can_construct_from_params(arg) for arg in args):
+        value_list = []
+
+        for i, (value_cls, value_params) in enumerate(zip(annotation.__args__, popped_params)):
+            value = construct_arg(
+                str(value_cls),
+                argument_name + f".{i}",
+                value_params,
+                value_cls,
+                _NO_DEFAULT,
+                **extras,
+            )
+            value_list.append(value)
+
+        return tuple(value_list)
+    
+    elif origin in (Set, set) and len(args) == 1 and can_construct_from_params(args[0]):
+        value_cls = annotation.__args__[0]
+
+        value_set = set()
+
+        for i, value_params in enumerate(popped_params):
+            value = construct_arg(
+                str(value_cls),
+                argument_name + f".{i}",
+                value_params,
+                value_cls,
+                _NO_DEFAULT,
+                **extras,
+            )
+            value_set.add(value)
+
+        return value_set
         
     elif origin == Union:
         backup_params = deepcopy(popped_params)
@@ -206,6 +275,28 @@ def construct_arg(
                 e.args = (f"While constructing an argument of type {arg_annotation}",) + e.args
                 e.__cause__ = error_chain
                 error_chain = e
+                
+    elif (
+        origin in {collections.abc.Iterable, Iterable, List, list}
+        and len(args) == 1
+        and can_construct_from_params(args[0])
+    ):
+        value_cls = annotation.__args__[0]
+
+        value_list = []
+
+        for i, value_params in enumerate(popped_params):
+            value = construct_arg(
+                str(value_cls),
+                argument_name + f".{i}",
+                value_params,
+                value_cls,
+                _NO_DEFAULT,
+                **extras,
+            )
+            value_list.append(value)
+
+        return value_list
                 
     else:
         return popped_params
