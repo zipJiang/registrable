@@ -384,7 +384,15 @@ class Registrable:
     def __init__(self):
         """Do nothing in the init function
         """
-        pass
+        self._hparams = None
+
+    @property
+    def hparams(self):
+        return self._hparams
+
+    @hparams.setter
+    def hparams(self, hparams: Dict[Text, Any]):
+        self._hparams = hparams
         
     @classmethod
     def register(cls, name: Text, constructor: Optional[Text] = None) -> Callable[[Type[T]], Type[T]]:
@@ -407,6 +415,7 @@ class Registrable:
         """This function is called to generate a class obj from
         a parameter dictionary that matches the callable.
         """
+
         class_name = params.pop('type')
         class_tuple = cls.__named_subclasses__[cls][class_name]
 
@@ -417,7 +426,11 @@ class Registrable:
         kwargs = create_kwargs(constructor, class_, params)
 
         if constructor is None:
-            return class_(**kwargs)
+            constructed = class_(**kwargs)
         
         else:
-            return getattr(class_, constructor)(**kwargs)
+            constructed = getattr(class_, constructor)(**kwargs)
+
+        constructed.hparams = params
+
+        return constructed
