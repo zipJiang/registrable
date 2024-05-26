@@ -415,6 +415,7 @@ class Registrable:
         """This function is called to generate a class obj from
         a parameter dictionary that matches the callable.
         """
+        checkpoint_params = deepcopy(params)
 
         class_name = params.pop('type')
         class_tuple = cls.__named_subclasses__[cls][class_name]
@@ -431,6 +432,6 @@ class Registrable:
         else:
             constructed = getattr(class_, constructor)(**kwargs)
 
-        constructed.hparams = params
+        constructed.hparams = checkpoint_params
 
         return constructed
