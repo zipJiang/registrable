@@ -416,8 +416,6 @@ class Registrable:
         a parameter dictionary that matches the callable.
         """
 
-        print(params)
-
         class_name = params.pop('type')
         class_tuple = cls.__named_subclasses__[cls][class_name]
 
@@ -434,6 +432,5 @@ class Registrable:
             constructed = getattr(class_, constructor)(**kwargs)
 
         constructed.hparams = params
-        print(constructed.hparams)
 
         return constructed
