@@ -424,7 +424,7 @@ class Registrable:
 
         # need to recursively call from_params with the kwargs
         # TODO: make sure it does not look for object.__init__
-        kwargs = create_kwargs(constructor, class_, params)
+        kwargs = create_kwargs(getattr(class_, constructor), class_, params)
 
         if constructor is None:
             constructed = class_(**kwargs)
